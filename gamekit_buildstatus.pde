@@ -69,6 +69,22 @@ void loop() {
     }
   }
 
+  if (gamekit.button_pressed(butt_UP)) {
+    status = STAT_SUCCESS;
+    update = 1;
+  }
+
+  if (gamekit.button_pressed(butt_LEFT) ||
+      gamekit.button_pressed(butt_RIGHT)) {
+    status = STAT_RUNNING;
+    update = 1;
+  }
+
+  if (gamekit.button_pressed(butt_DOWN)) {
+    status = STAT_FAILED;
+    update = 1;
+  }
+
   if (update) {
     gamekit.load_image(images[status]);
   }
