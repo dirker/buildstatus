@@ -20,7 +20,7 @@ char status_chars[MAX_STATUS] = {
 
 uint8_t status_pixelvalues[MAX_STATUS] = {
    0,
-   6,
+  16,
   15,
 };
 
@@ -32,8 +32,55 @@ char *status_strings[MAX_STATUS] = {
 
 static int i;
 
+/*
+ * pixelfunction for status running:
+ *  - dimming up and down slowly
+ *  - only dim out to a certain minimum level
+ *  - a break when dimmed out
+ */
+uint8_t pixelfunc_running(uint8_t row, uint8_t col, uint32_t systemcounter)
+{
+#define MIN_LEVEL 2
+  static uint8_t val = MIN_LEVEL;
+  static uint32_t old_counter = 0;
+  static uint8_t up_down = 0;
+  static uint8_t dimming = 1;
+
+  if (!dimming) {
+    if (systemcounter >= (old_counter + 1000)) {
+      dimming = 1;
+    } else {
+      return val;
+    }
+  }
+
+  if(systemcounter >= (old_counter + 6))
+  {
+    if (up_down == 0)
+    {
+      val++;
+      if(val == gamekit_max_bright)
+        up_down = 1;
+    }
+    else
+    {
+      val--;
+      if(val == MIN_LEVEL) {
+        up_down = 0;
+        dimming = 0;
+      }
+    };
+    old_counter= systemcounter;
+  }
+
+  return val;
+#undef MIN_LEVEL
+}
+
 void setup() {
   gamekit.Begin();
+  gamekit.assign_pixelfunction(16, pixelfunc_running);
+
   Serial.begin(9600);
 }
 
