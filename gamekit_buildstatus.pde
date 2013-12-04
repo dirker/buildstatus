@@ -1,7 +1,7 @@
 #include <gamekit.h>
 #include <avr/pgmspace.h>
 
-enum status {
+enum Status {
   STAT_SUCCESS,
   STAT_RUNNING,
   STAT_FAILED,
@@ -56,14 +56,14 @@ void setup() {
 
 void loop() {
   int update = 0;
-  enum status status;
+  Status status;
   
   if (Serial.available()) {
     char c = Serial.read();
     
     for (i = 0; i < MAX_STATUS; i++) {
       if (c == status_chars[i]) {
-        status = static_cast<enum status>(i);
+        status = static_cast<Status>(i);
         update = 1;
       }
     }
