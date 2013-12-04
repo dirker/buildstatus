@@ -1,6 +1,10 @@
 #include <gamekit.h>
 #include <avr/pgmspace.h>
 
+/* gamekit internally reverses rows/columns, so redefine here */
+#define PIXEL_ROWS gamekit_col_count
+#define PIXEL_COLUMNS gamekit_row_count
+
 enum Status {
   STAT_SUCCESS,
   STAT_RUNNING,
@@ -14,37 +18,16 @@ char status_chars[MAX_STATUS] = {
   'f',
 };
 
+uint8_t status_pixelvalues[MAX_STATUS] = {
+   0,
+   6,
+  15,
+};
+
 char *status_strings[MAX_STATUS] = {
   "success",
   "running",
   "failed",
-};
-
-uint8_t images[MAX_STATUS][5][7] PROGMEM = {
-  /* success image */
-  {
-    15, 0, 0, 0, 0, 0, 0,
-    15, 0, 0, 0, 0, 0, 0,
-    15, 0, 0, 0, 0, 0, 0,
-    15, 0, 0, 0, 0, 0, 0,
-    15, 0, 0, 0, 0, 0, 0,
-  },
-  /* running image */
-  {
-     0,10, 0, 0, 0, 0, 0,
-     0,10, 0, 0, 0, 0, 0,
-     0,10, 0, 0, 0, 0, 0,
-     0,10, 0, 0, 0, 0, 0,
-     0,10, 0, 0, 0, 0, 0,
-  },
-  /* failed image */
-  {
-     0, 0,10, 0, 0, 0, 0,
-     0, 0,10, 0, 0, 0, 0,
-     0, 0,10, 0, 0, 0, 0,
-     0, 0,10, 0, 0, 0, 0,
-     0, 0,10, 0, 0, 0, 0,
-  },
 };
 
 static int i;
@@ -52,6 +35,16 @@ static int i;
 void setup() {
   gamekit.Begin();
   Serial.begin(9600);
+}
+
+void update_status(::Status status) {
+  uint8_t row, column, val = status_pixelvalues[status];
+
+  for (row = 0; row < PIXEL_ROWS; row++) {
+    for (column = 0; column < PIXEL_COLUMNS; column++) {
+      gamekit.set_pixel(row, column, val);
+    }
+  }
 }
 
 void loop() {
@@ -86,6 +79,6 @@ void loop() {
   }
 
   if (update) {
-    gamekit.load_image(images[status]);
+    update_status(status);
   }
 }
