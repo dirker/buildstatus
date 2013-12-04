@@ -1,13 +1,17 @@
 #include <gamekit.h>
 #include <avr/pgmspace.h>
 
-#define BUFSIZE 16
-
 enum status {
   STAT_SUCCESS,
   STAT_RUNNING,
   STAT_FAILED,
   MAX_STATUS
+};
+
+char status_chars[MAX_STATUS] = {
+  's',
+  'r',
+  'f',
 };
 
 char *status_strings[MAX_STATUS] = {
@@ -45,45 +49,27 @@ uint8_t images[MAX_STATUS][5][7] PROGMEM = {
 
 static int i;
 
-static char buf[BUFSIZE];
-static int bufidx;
-
 void setup() {
   gamekit.Begin();
   Serial.begin(9600);
 }
 
 void loop() {
-  int received = 0;
+  int update = 0;
+  enum status status;
   
   if (Serial.available()) {
     char c = Serial.read();
     
-    if (c == '\r' || c == '\n')
-      c = 0;
-      
-    if (bufidx < BUFSIZE)
-      buf[bufidx++] = c;
-      
-    if (bufidx == BUFSIZE)
-      bufidx = BUFSIZE - 1;
-    
-    if (!c) {
-      buf[bufidx] = 0;
-      bufidx = 0;
-      received = 1;
+    for (i = 0; i < MAX_STATUS; i++) {
+      if (c == status_chars[i]) {
+        status = static_cast<enum status>(i);
+        update = 1;
+      }
     }
   }
 
-  if (!received)
-    return;
-  
-  for (i = 0; i < MAX_STATUS; i++) {
-    if (strcmp(buf, status_strings[i]) == 0) {
-      break;
-    }
+  if (update) {
+    gamekit.load_image(images[status]);
   }
-
-  if (i < MAX_STATUS)
-    gamekit.load_image(images[i]);  
 }
